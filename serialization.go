@@ -34,13 +34,7 @@ func DeserializeIniFile(data string) (*IniFile, error) {
 			currentSection = NewIniSection(sectionName)
 			file.Sections = append(file.Sections, currentSection)
 		} else if currentSection != nil {
-			// If not a section, assume it's a key-value pair
-			parts := strings.SplitN(line, "=", 2)
-			if len(parts) == 2 {
-				key := strings.TrimSpace(parts[0])
-				value := strings.TrimSpace(parts[1])
-				currentSection.AddKey(key, value)
-			}
+			currentSection.AddParsedKey(line)
 		}
 	}
 
