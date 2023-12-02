@@ -42,3 +42,4 @@ gen
 .sonarlint/
 
 .idea/sonarlint/
+*.pb
