@@ -41,3 +41,4 @@ gen
 # SonarLint working directories, configuration files (including credentials)
 .sonarlint/
 
+.idea/sonarlint/
