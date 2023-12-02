@@ -14,12 +14,14 @@ func NewIniSection(sectionName string) *IniSection {
 	}
 }
 
-// AddKey adds a key to the section, no matter if it already exists. This can create duplicate values
+//region Key & Value adding
+
+// AddKey adds a key no matter if it already exists. (May result in duplicate keys) (it will take the first key found if there are more)
 func (s *IniSection) AddKey(keyName string, value string) {
 	s.Keys = append(s.Keys, NewIniKey(keyName, value))
 }
 
-// AddOrReplaceKey adds a key to the section, or replaces the value of an existing key. Use this if you don't want duplicate keys
+// AddOrReplaceKey adds a key if it not exists otherwise it will replace it (it will take the first key found if there are more) (Use this to avoid duplicate keys)
 func (s *IniSection) AddOrReplaceKey(keyName string, value string) {
 	for _, key := range s.Keys {
 		if key.KeyName == keyName {
@@ -30,12 +32,21 @@ func (s *IniSection) AddOrReplaceKey(keyName string, value string) {
 	s.Keys = append(s.Keys, NewIniKey(keyName, value))
 }
 
-// AddParsedKey adds a key to the section, parsing the keyString into a key value pair
+// AddParsedKey adds a key from a string like “key=value”, no matter if it already exists (it will take the first key found if there are more)
 func (s *IniSection) AddParsedKey(keyString string) {
 	key := NewParsedIniKey(keyString)
-
-	s.Keys = append(s.Keys, key)
+	s.AddKey(key.KeyName, key.Value)
 }
+
+// AddOrReplaceParsedKey adds a key from a string like “key=value” if it does not exist otherwise it will replace it (it will take the first key found if there are more) (Use this to avoid duplicate keys)
+func (s *IniSection) AddOrReplaceParsedKey(keyString string) {
+	key := NewParsedIniKey(keyString)
+	s.AddOrReplaceKey(key.KeyName, key.Value)
+}
+
+//endregion
+
+//region Getting keys
 
 // GetKey returns the key with the given name and true, or nil and false if it doesn't exist
 func (s *IniSection) GetKey(keyName string) (*IniKey, bool) {
@@ -47,14 +58,20 @@ func (s *IniSection) GetKey(keyName string) (*IniKey, bool) {
 	return nil, false
 }
 
-// AllKeysToStringSlice returns all keys in the section as a slice of strings
-func (s *IniSection) AllKeysToStringSlice() []string {
-	var keys []string
+// GetMultipleKeys gets all the keys with the same name
+func (s *IniSection) GetMultipleKeys(keyName string) []*IniKey {
+	var keys []*IniKey
 	for _, key := range s.Keys {
-		keys = append(keys, key.ToString())
+		if key.KeyName == keyName {
+			keys = append(keys, key)
+		}
 	}
 	return keys
 }
+
+//endregion
+
+//region Removing keys
 
 // RemoveKey removes the key with the given name from the section
 func (s *IniSection) RemoveKey(keyName string) {
@@ -64,6 +81,28 @@ func (s *IniSection) RemoveKey(keyName string) {
 			return
 		}
 	}
+}
+
+// RemoveMultipleKey removes all the keys with the same KeyName
+func (s *IniSection) RemoveMultipleKey(keyName string) {
+	for i, key := range s.Keys {
+		if key.KeyName == keyName {
+			s.Keys = append(s.Keys[:i], s.Keys[i+1:]...)
+		}
+	}
+}
+
+//endregion
+
+//region Helpers
+
+// AllKeysToStringSlice returns all keys in the section as a slice of strings
+func (s *IniSection) AllKeysToStringSlice() []string {
+	var keys []string
+	for _, key := range s.Keys {
+		keys = append(keys, key.ToString())
+	}
+	return keys
 }
 
 // RemoveAllKeys removes all keys from the section
@@ -84,3 +123,16 @@ func (s *IniSection) ToString() string {
 func (s *IniSection) SectionNameToString() string {
 	return "[" + s.SectionName + "]"
 }
+
+// CheckForMultipleKeys returns the number of keys with the given name in the section.
+func (s *IniSection) CheckForMultipleKeys(keyName string) int {
+	var count = 0
+	for _, key := range s.Keys {
+		if key.KeyName == keyName {
+			count++
+		}
+	}
+	return count
+}
+
+//endregion
