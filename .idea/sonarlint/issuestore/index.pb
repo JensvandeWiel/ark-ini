@@ -15,3 +15,16 @@ B
 section.go,d\4\d41b61762be45540ede5c7c199d014a30da8b365
 9
 	readme.md,2\7\275d783e298228506068436512433d343feb52aa
+7
+LICENSE,0\3\0398ccd0f49298b10a3d76a47800d2ebecd49859
+:
+
+.gitignore,a\5\a5cc2925ca8258af241be7e5b0381edf30266302
+?
+section_test.go,f\d\fd29d20535d5f9d432b01191927dfb6304200e2e
+@
+Serialization.go,4\9\49314f70c83127957e903fefdda4875835835903
+E
+serialization_test.go,2\1\21014955fe6ebbb23981de573524aca62896cebf
+@
+serialization.go,b\8\b87848920a6b0ed200f265ca6b47618afcf54dbe

@@ -92,6 +92,11 @@ func (s *IniSection) RemoveMultipleKey(keyName string) {
 	}
 }
 
+// RemoveAllKeys removes all keys from the section
+func (s *IniSection) RemoveAllKeys() {
+	s.Keys = make([]*IniKey, 0)
+}
+
 //endregion
 
 //region Helpers
@@ -103,11 +108,6 @@ func (s *IniSection) AllKeysToStringSlice() []string {
 		keys = append(keys, key.ToString())
 	}
 	return keys
-}
-
-// RemoveAllKeys removes all keys from the section
-func (s *IniSection) RemoveAllKeys() {
-	s.Keys = make([]*IniKey, 0)
 }
 
 // ToString returns the section as a string in ini format
