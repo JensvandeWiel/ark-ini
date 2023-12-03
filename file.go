@@ -1,6 +1,8 @@
 package ini
 
-import "path/filepath"
+import (
+	"path/filepath"
+)
 
 type IniFile struct {
 	fileName             string
