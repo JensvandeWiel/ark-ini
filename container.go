@@ -3,8 +3,11 @@ package ini
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
+
+//region IniContainer
 
 type IniContainer struct {
 	KeyValues []ContainerKeyValue
@@ -20,9 +23,124 @@ func NewIniContainerFromString(inputString string) (IniContainer, error) {
 	return IniContainer{KeyValues: keyValues}, nil
 }
 
+//endregion
+
+//region ContainerKeyValue
+
 type ContainerKeyValue struct {
 	Key   string
 	Value interface{}
+}
+
+func (c *ContainerKeyValue) ToString() string {
+	return fmt.Sprintf("%s=%v", c.Key, c.Value)
+}
+
+//region Key Conversions
+
+// AsString returns the key value as a string
+func (c *ContainerKeyValue) AsString() (string, error) {
+	value, ok := c.Value.(string)
+	if !ok {
+		return "", errors.New("key value is not a string")
+	}
+	return value, nil
+}
+
+// AsInt returns the key value as an int
+func (c *ContainerKeyValue) AsInt() (int, error) {
+	strValue, ok := c.Value.(string)
+	if !ok {
+		return 0, errors.New("key value is not a string")
+	}
+
+	intValue, err := strconv.Atoi(strValue)
+	if err != nil {
+		return 0, errors.New("failed to convert key value to int")
+	}
+
+	return intValue, nil
+}
+
+// AsFloat64 returns the key value as a float64
+func (c *ContainerKeyValue) AsFloat64() (float64, error) {
+	strValue, ok := c.Value.(string)
+	if !ok {
+		return 0, errors.New("key value is not a string")
+	}
+
+	floatValue, err := strconv.ParseFloat(strValue, 64)
+	if err != nil {
+		return 0, errors.New("failed to convert key value to float64")
+	}
+
+	return floatValue, nil
+}
+
+// AsBool returns the key value as a bool
+func (c *ContainerKeyValue) AsBool() (bool, error) {
+	strValue, ok := c.Value.(string)
+	if !ok {
+		return false, errors.New("key value is not a string")
+	}
+
+	boolValue, err := strconv.ParseBool(strValue)
+	if err != nil {
+		return false, errors.New("failed to convert key value to bool")
+	}
+
+	return boolValue, nil
+}
+
+// AsContainer returns the key value as a container
+func (c *ContainerKeyValue) AsContainer() (IniContainer, error) {
+	strValue, ok := c.Value.(string)
+	if !ok {
+		return IniContainer{}, errors.New("key value is not a string")
+	}
+
+	if strings.HasPrefix(strValue, "(") && strings.HasSuffix(strValue, ")") {
+		return NewIniContainerFromString(strValue)
+	}
+
+	return IniContainer{}, errors.New("key value is not a container")
+}
+
+// AsGuessedValue returns the key value as a guessed value and the value type
+func (c *ContainerKeyValue) AsGuessedValue() (interface{}, KeyType, error) {
+	switch v := c.Value.(type) {
+	case string:
+		if strings.HasPrefix(v, "(") && strings.HasSuffix(v, ")") {
+			cont, err := NewIniContainerFromString(v)
+			if err == nil {
+				return cont, Container, nil
+			}
+			return nil, Fail, err
+		} else if val, err := strconv.ParseFloat(v, 64); err == nil && hasDecimal(val) {
+			return val, Float64, nil
+		} else if val, err := strconv.Atoi(v); err == nil {
+			return val, Int, nil
+		} else if val, err := strconv.ParseBool(v); err == nil {
+			return val, Boolean, nil
+		} else {
+			return v, String, nil
+		}
+	case []ContainerKeyValue:
+		return v, Container, nil
+	}
+
+	return nil, Fail, errors.New("unsupported type")
+}
+
+//endregion
+
+//endregion
+
+//region helpers
+
+// ToString returns the values of the container as a string e.g. "EngramClassName="EngramEntry_CryoGun_Mod_C",EngramHidden=True,EngramPointsCost=0,EngramLevelRequirement=90,RemoveEngramPreReq=False"
+func (c *IniContainer) ToString() string {
+	return serializeToContainerKV(c.KeyValues)
 }
 
 // serializeToContainerKV serializes a slice of key-value pairs to a string
@@ -40,9 +158,6 @@ func serializeToContainerKV(inputSlice []ContainerKeyValue) string {
 		}
 	}
 
-	/*if len(inputSlice) > 1 {
-		return "(" + strings.Join(parts, ",") + ")"
-	}*/
 	return strings.Join(parts, ",")
 }
 
@@ -119,13 +234,6 @@ func splitInputString(inputString string) []string {
 	}
 
 	return parts
-}
-
-//region helpers
-
-// ToString returns the values of the container as a string e.g. "EngramClassName="EngramEntry_CryoGun_Mod_C",EngramHidden=True,EngramPointsCost=0,EngramLevelRequirement=90,RemoveEngramPreReq=False"
-func (c *IniContainer) ToString() string {
-	return serializeToContainerKV(c.KeyValues)
 }
 
 //endregion
