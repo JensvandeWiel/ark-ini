@@ -2,6 +2,7 @@ package ini
 
 import (
 	"path/filepath"
+	"strings"
 )
 
 type IniFile struct {
@@ -105,4 +106,35 @@ func (f *IniFile) ToString() string {
 		file += section.ToString()
 	}
 	return file
+}
+
+// DeserializeFromString deserializes the IniFile from an INI file string
+func DeserializeFromString(data string, path string, allowedDuplicateKeys ...string) (*IniFile, error) {
+
+	iniFile := NewIniFile(path, allowedDuplicateKeys...)
+
+	var currentSection *IniSection
+
+	lines := strings.Split(data, "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || line[0] == ';' || line[0] == '#' {
+			continue // Ignore empty lines and comments
+		}
+
+		if line[0] == '[' && line[len(line)-1] == ']' {
+			sectionName := strings.TrimSpace(line[1 : len(line)-1])
+			currentSection = NewIniSection(sectionName)
+			iniFile.Sections = append(iniFile.Sections, currentSection)
+		} else if currentSection != nil {
+			parts := strings.SplitN(line, "=", 2)
+			if len(parts) == 2 {
+				keyName := strings.TrimSpace(parts[0])
+				value := strings.TrimSpace(parts[1])
+				currentSection.AddKey(keyName, value)
+			}
+		}
+	}
+
+	return iniFile, nil
 }

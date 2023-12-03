@@ -28,11 +28,7 @@ E
 serialization_test.go,2\1\21014955fe6ebbb23981de573524aca62896cebf
 @
 serialization.go,b\8\b87848920a6b0ed200f265ca6b47618afcf54dbe
-?
-general_test.go,5\b\5b734eb7854eb63172fef4f56b65358527ec2215
-C
-container/readme.md,1\7\17a9c76bf1ab7444c48cdc42365635c9cfd28b85
-F
-container/container.go,2\7\2795131642664c54bbaf42bc4c7b132339b66b50
 <
 container.go,f\1\f1d4d745c6ab0da0226666494dade2bc2a4e62e3
+@
+examples/main.go,d\3\d363822b015b08f88405eda8861d85a99587d23b
