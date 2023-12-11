@@ -2,7 +2,7 @@ package ini
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"strings"
 )
 
@@ -19,26 +19,28 @@ const (
 
 // IniKey represents a key in an INI file
 type IniKey struct {
-	KeyName string
-	Value   string
+	Key   string
+	Value interface{}
 }
 
 // ToString returns the key as a string in ini format
 func (k *IniKey) ToString() string {
-	return k.KeyName + "=" + k.Value
+	return fmt.Sprintf("%s=%s", k.Key, k.ToValueString())
+}
+
+// ToValueString returns the key's value as a string
+func (k *IniKey) ToValueString() string {
+	if container, ok := k.Value.(IniContainer); ok {
+		return container.ToString()
+	} else {
+		return fmt.Sprintf("%v", k.Value)
+	}
 }
 
 // ToContainerString returns the key value as a container string e.g. "OverrideNamedEngramEntries=(EngramClassName="EngramEntry_CryoGun_Mod_C",EngramHidden=True,EngramPointsCost=0,EngramLevelRequirement=90,RemoveEngramPreReq=False)"
 func (k *IniKey) ToContainerString() (string, error) {
-	if strings.HasPrefix(k.Value, "(") && strings.HasSuffix(k.Value, ")") {
-
-		cont, err := NewIniContainerFromString(k.ToString())
-
-		if err != nil {
-			return "", err
-		}
-
-		return cont.ToString(), nil
+	if container, ok := k.Value.(IniContainer); ok {
+		return container.ToString(), nil
 	} else {
 		return "", errors.New("key value is not a container")
 	}
@@ -57,45 +59,62 @@ func NewParsedIniKey(keyString string) *IniKey {
 		return nil
 	}
 
-	key := &IniKey{KeyName: splitKeyString[0]}
+	key := NewIniKey(splitKeyString[0], "")
 
 	if len(splitKeyString) > 1 {
-		key.Value = splitKeyString[1]
+		key.Value = toGuessedType(splitKeyString[1])
 	}
 
 	return key
 }
 
 // NewIniKey returns a new IniKey with the given key and value
-func NewIniKey(keyName string, keyValue string) *IniKey {
-	return &IniKey{KeyName: keyName, Value: keyValue}
+func NewIniKey(keyName string, keyValue interface{}) *IniKey {
+	return &IniKey{Key: keyName, Value: keyValue}
 }
 
 //region Key Conversions
 
 // AsString returns the key value as a string
-func (k *IniKey) AsString() string {
-	return k.Value
+func (k *IniKey) AsString() (string, error) {
+	if s, ok := k.Value.(string); ok {
+		return s, nil
+	} else {
+		return "", errors.New("key value is not a string")
+	}
 }
 
 // AsInt returns the key value as an int
 func (k *IniKey) AsInt() (int, error) {
-	return strconv.Atoi(k.Value)
+	if i, ok := k.Value.(int); ok {
+		return i, nil
+	} else {
+		return -1, errors.New("key value is not an int")
+	}
 }
 
 // AsFloat64 returns the key value as an int64
 func (k *IniKey) AsFloat64() (float64, error) {
-	return strconv.ParseFloat(k.Value, 64)
+	if f, ok := k.Value.(float64); ok {
+		return f, nil
+	} else {
+		return -1, errors.New("key value is not a float64")
+	}
 }
 
+// AsBool returns the key value as a bool
 func (k *IniKey) AsBool() (bool, error) {
-	return strconv.ParseBool(k.Value)
+	if b, ok := k.Value.(bool); ok {
+		return b, nil
+	} else {
+		return false, errors.New("key value is not a bool")
+	}
 }
 
 // AsContainer returns the key value as a container
 func (k *IniKey) AsContainer() (IniContainer, error) {
-	if strings.HasPrefix(k.Value, "(") && strings.HasSuffix(k.Value, ")") {
-		return NewIniContainerFromString(k.Value)
+	if container, ok := k.Value.(IniContainer); ok {
+		return container, nil
 	} else {
 		return IniContainer{}, errors.New("key value is not a container")
 	}
@@ -103,22 +122,20 @@ func (k *IniKey) AsContainer() (IniContainer, error) {
 
 // AsGuessedValue returns the key value as a guessed value and the value type
 func (k *IniKey) AsGuessedValue() (interface{}, KeyType) {
-	if strings.HasPrefix(k.Value, "(") && strings.HasSuffix(k.Value, ")") {
-		cont, err := NewIniContainerFromString(k.Value)
-		if err != nil {
-			return nil, Fail
-		}
-		return cont, Container
-	} else if val, err := strconv.ParseFloat(k.Value, 64); err == nil && hasDecimal(val) {
-		return val, Float64
-	} else if val, err := strconv.Atoi(k.Value); err == nil {
-		return val, Int
-	} else if val, err := strconv.ParseBool(k.Value); err == nil {
-		return val, Boolean
-	} else {
-		return k.Value, String
+	switch k.Value.(type) {
+	case string:
+		return k.Value.(string), String
+	case int:
+		return k.Value.(int), Int
+	case float64:
+		return k.Value.(float64), Float64
+	case bool:
+		return k.Value.(bool), Boolean
+	case IniContainer:
+		return k.Value.(IniContainer), Container
+	default:
+		return nil, Fail
 	}
-
 }
 
 //endregion
