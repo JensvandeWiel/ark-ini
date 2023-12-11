@@ -1,7 +1,5 @@
 package ini
 
-//TODO add parsing of values and save them as the type and not a string
-
 // IniSection represents a section in an INI file
 type IniSection struct {
 	SectionName string
@@ -19,12 +17,12 @@ func NewIniSection(sectionName string) *IniSection {
 //region Key & Value adding
 
 // AddKey adds a key no matter if it already exists. (May result in duplicate keys) (it will take the first key found if there are more)
-func (s *IniSection) AddKey(keyName string, value string) {
+func (s *IniSection) AddKey(keyName string, value interface{}) {
 	s.Keys = append(s.Keys, NewIniKey(keyName, value))
 }
 
 // AddOrReplaceKey adds a key if it not exists otherwise it will replace it (it will take the first key found if there are more) (Use this to avoid duplicate keys)
-func (s *IniSection) AddOrReplaceKey(keyName string, value string) {
+func (s *IniSection) AddOrReplaceKey(keyName string, value interface{}) {
 	for _, key := range s.Keys {
 		if key.Key == keyName {
 			key.Value = value
@@ -75,7 +73,7 @@ func (s *IniSection) GetMultipleKeys(keyName string) []*IniKey {
 
 //region Removing keys
 
-// RemoveKey removes the key with the given name from the section
+// RemoveKey removes the key with the given name from the section if there are more it will take the first one
 func (s *IniSection) RemoveKey(keyName string) {
 	for i, key := range s.Keys {
 		if key.Key == keyName {
@@ -114,7 +112,7 @@ func (s *IniSection) AllKeysToStringSlice() []string {
 
 // ToString returns the section as a string in ini format
 func (s *IniSection) ToString() string {
-	var section string = "[" + s.SectionName + "]\n"
+	section := s.SectionNameToString() + "\n"
 	for _, key := range s.Keys {
 		section += key.ToString() + "\n"
 	}
