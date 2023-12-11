@@ -13,6 +13,8 @@ type IniContainer struct {
 	KeyValues []ContainerKeyValue
 }
 
+//TODO add parsing of values and save them as the type and not a string
+
 // NewIniContainerFromString returns a new IniContainer. The input string must be '
 func NewIniContainerFromString(inputString string) (IniContainer, error) {
 	keyValues, err := deserializeToContainerKv(inputString)
@@ -47,6 +49,8 @@ func (c *ContainerKeyValue) ToString() string {
 }
 
 //region Key Conversions
+
+//TODO update the same way as IniKey
 
 // AsString returns the key value as a string
 func (c *ContainerKeyValue) AsString() (string, error) {
@@ -118,6 +122,7 @@ func (c *ContainerKeyValue) AsContainer() (IniContainer, error) {
 
 // AsGuessedValue returns the key value as a guessed value and the value type
 func (c *ContainerKeyValue) AsGuessedValue() (interface{}, KeyType, error) {
+
 	switch v := c.Value.(type) {
 	case string:
 		if strings.HasPrefix(v, "(") && strings.HasSuffix(v, ")") {

@@ -4,6 +4,8 @@ import (
 	"strings"
 )
 
+//TODO add parsing of values and save them as the type and not a string
+
 // SerializeIniFile converts IniFile to INI format string
 func SerializeIniFile(file *IniFile) string {
 	var result string
@@ -12,6 +14,8 @@ func SerializeIniFile(file *IniFile) string {
 	}
 	return result
 }
+
+//TODO add parsing of values and save them as the type and not a string
 
 // DeserializeIniFile converts INI format string to IniFile
 func DeserializeIniFile(data string) (IniFile, error) {
