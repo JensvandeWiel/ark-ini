@@ -14,7 +14,7 @@ func SerializeIniFile(file *IniFile) string {
 }
 
 // DeserializeIniFile converts INI format string to IniFile
-func DeserializeIniFile(data string) (*IniFile, error) {
+func DeserializeIniFile(data string) (IniFile, error) {
 	lines := strings.Split(data, "\n")
 	file := NewIniFile("") // Initialize an empty IniFile
 

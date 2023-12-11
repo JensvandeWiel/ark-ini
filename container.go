@@ -23,6 +23,16 @@ func NewIniContainerFromString(inputString string) (IniContainer, error) {
 	return IniContainer{KeyValues: keyValues}, nil
 }
 
+// FindKey returns the key with the given name and true, or nil and false if it doesn't exist
+func (c *IniContainer) FindKey(keyName string) (*ContainerKeyValue, bool) {
+	for _, key := range c.KeyValues {
+		if key.Key == keyName {
+			return &key, true
+		}
+	}
+	return nil, false
+}
+
 //endregion
 
 //region ContainerKeyValue
