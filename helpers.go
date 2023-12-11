@@ -18,9 +18,7 @@ func hasDecimal(floatNum float64) bool {
 func checkValueType(value string) KeyType {
 	if strings.HasPrefix(value, "(") && strings.HasSuffix(value, ")") {
 		return Container
-	} /* else if _, err := strconv.Atoi(value); err == nil {
-		return Int
-	}*/else if f, err := strconv.ParseFloat(value, 64); err == nil {
+	} else if f, err := strconv.ParseFloat(value, 64); err == nil {
 		if hasDecimal(f) {
 			return Float64
 		} else {
