@@ -3,14 +3,13 @@ package ini
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
 //region IniContainer
 
 type IniContainer struct {
-	KeyValues []ContainerKeyValue
+	KeyValues []ContainerKey
 }
 
 //TODO add parsing of values and save them as the type and not a string
@@ -26,7 +25,7 @@ func NewIniContainerFromString(inputString string) (IniContainer, error) {
 }
 
 // FindKey returns the key with the given name and true, or nil and false if it doesn't exist
-func (c *IniContainer) FindKey(keyName string) (*ContainerKeyValue, bool) {
+func (c *IniContainer) FindKey(keyName string) (*ContainerKey, bool) {
 	for _, key := range c.KeyValues {
 		if key.Key == keyName {
 			return &key, true
@@ -37,15 +36,24 @@ func (c *IniContainer) FindKey(keyName string) (*ContainerKeyValue, bool) {
 
 //endregion
 
-//region ContainerKeyValue
+//region ContainerKey
 
-type ContainerKeyValue struct {
+type ContainerKey struct {
 	Key   string
 	Value interface{}
 }
 
-func (c *ContainerKeyValue) ToString() string {
+func (c *ContainerKey) ToString() string {
 	return fmt.Sprintf("%s=%v", c.Key, c.Value)
+}
+
+// ToValueString returns the key's value as a string
+func (c *ContainerKey) ToValueString() string {
+	if container, ok := c.Value.(IniContainer); ok {
+		return container.ToString()
+	} else {
+		return fmt.Sprintf("%v", c.Value)
+	}
 }
 
 //region Key Conversions
@@ -53,98 +61,73 @@ func (c *ContainerKeyValue) ToString() string {
 //TODO update the same way as IniKey
 
 // AsString returns the key value as a string
-func (c *ContainerKeyValue) AsString() (string, error) {
-	value, ok := c.Value.(string)
-	if !ok {
+func (c *ContainerKey) AsString() (string, error) {
+
+	if value, ok := c.Value.(string); ok {
+		return value, nil
+
+	} else {
 		return "", errors.New("key value is not a string")
 	}
-	return value, nil
 }
 
 // AsInt returns the key value as an int
-func (c *ContainerKeyValue) AsInt() (int, error) {
-	strValue, ok := c.Value.(string)
-	if !ok {
-		return 0, errors.New("key value is not a string")
+func (c *ContainerKey) AsInt() (int, error) {
+	if value, ok := c.Value.(int); ok {
+		return value, nil
+	} else {
+		return -1, errors.New("key value is not an int")
 	}
-
-	intValue, err := strconv.Atoi(strValue)
-	if err != nil {
-		return 0, errors.New("failed to convert key value to int")
-	}
-
-	return intValue, nil
 }
 
 // AsFloat64 returns the key value as a float64
-func (c *ContainerKeyValue) AsFloat64() (float64, error) {
-	strValue, ok := c.Value.(string)
-	if !ok {
-		return 0, errors.New("key value is not a string")
+func (c *ContainerKey) AsFloat64() (float64, error) {
+	if value, ok := c.Value.(float64); ok {
+		return value, nil
+	} else {
+		return -1, errors.New("key value is not a float64")
 	}
-
-	floatValue, err := strconv.ParseFloat(strValue, 64)
-	if err != nil {
-		return 0, errors.New("failed to convert key value to float64")
-	}
-
-	return floatValue, nil
 }
 
 // AsBool returns the key value as a bool
-func (c *ContainerKeyValue) AsBool() (bool, error) {
-	strValue, ok := c.Value.(string)
-	if !ok {
-		return false, errors.New("key value is not a string")
+func (c *ContainerKey) AsBool() (bool, error) {
+	if value, ok := c.Value.(bool); ok {
+		return value, nil
+	} else {
+		return false, errors.New("key value is not a bool")
 	}
-
-	boolValue, err := strconv.ParseBool(strValue)
-	if err != nil {
-		return false, errors.New("failed to convert key value to bool")
-	}
-
-	return boolValue, nil
 }
 
 // AsContainer returns the key value as a container
-func (c *ContainerKeyValue) AsContainer() (IniContainer, error) {
-	strValue, ok := c.Value.(string)
-	if !ok {
-		return IniContainer{}, errors.New("key value is not a string")
+func (c *ContainerKey) AsContainer() (IniContainer, error) {
+	if container, ok := c.Value.(IniContainer); ok {
+		return container, nil
+	} else if container, ok := c.Value.([]ContainerKey); ok {
+		return IniContainer{KeyValues: container}, nil
+	} else {
+		return IniContainer{}, errors.New("key value is not a container")
 	}
-
-	if strings.HasPrefix(strValue, "(") && strings.HasSuffix(strValue, ")") {
-		return NewIniContainerFromString(strValue)
-	}
-
-	return IniContainer{}, errors.New("key value is not a container")
 }
 
 // AsGuessedValue returns the key value as a guessed value and the value type
-func (c *ContainerKeyValue) AsGuessedValue() (interface{}, KeyType, error) {
+func (c *ContainerKey) AsGuessedValue() (interface{}, KeyType, error) {
 
-	switch v := c.Value.(type) {
+	switch c.Value.(type) {
 	case string:
-		if strings.HasPrefix(v, "(") && strings.HasSuffix(v, ")") {
-			cont, err := NewIniContainerFromString(v)
-			if err == nil {
-				return cont, Container, nil
-			}
-			return nil, Fail, err
-		} else if val, err := strconv.ParseFloat(v, 64); err == nil && hasDecimal(val) {
-			return val, Float64, nil
-		} else if val, err := strconv.Atoi(v); err == nil {
-			return val, Int, nil
-		} else if val, err := strconv.ParseBool(v); err == nil {
-			return val, Boolean, nil
-		} else {
-			return v, String, nil
-		}
-	case []ContainerKeyValue:
-		return v, Container, nil
+		return c.Value, String, nil
+	case int:
+		return c.Value, Int, nil
+	case float64:
+		return c.Value, Float64, nil
+	case bool:
+		return c.Value, Boolean, nil
+	case IniContainer:
+		return c.Value, Container, nil
+	case []ContainerKey:
+		return IniContainer{KeyValues: c.Value.([]ContainerKey)}, Container, nil
+	default:
+		return nil, Fail, errors.New("unknown key type")
 	}
-
-	return nil, Fail, errors.New("unsupported type")
 }
 
 //endregion
@@ -159,11 +142,11 @@ func (c *IniContainer) ToString() string {
 }
 
 // serializeToContainerKV serializes a slice of key-value pairs to a string
-func serializeToContainerKV(inputSlice []ContainerKeyValue) string {
+func serializeToContainerKV(inputSlice []ContainerKey) string {
 	var parts []string
 
 	for _, kv := range inputSlice {
-		if nestedSlice, ok := kv.Value.([]ContainerKeyValue); ok {
+		if nestedSlice, ok := kv.Value.([]ContainerKey); ok {
 			// Recursively serialize nested slices
 			nestedStr := serializeToContainerKV(nestedSlice)
 			parts = append(parts, fmt.Sprintf("%s=(%s)", kv.Key, nestedStr))
@@ -177,8 +160,8 @@ func serializeToContainerKV(inputSlice []ContainerKeyValue) string {
 }
 
 // deserializeToContainerKv deserializes a string to a slice of key-value pairs
-func deserializeToContainerKv(inputString string) ([]ContainerKeyValue, error) {
-	var result []ContainerKeyValue
+func deserializeToContainerKv(inputString string) ([]ContainerKey, error) {
+	var result []ContainerKey
 
 	if inputString == "" || strings.TrimSpace(inputString) == "" {
 		return nil, errors.New("inputString is empty")
@@ -187,8 +170,7 @@ func deserializeToContainerKv(inputString string) ([]ContainerKeyValue, error) {
 	var parts []string
 
 	if strings.HasPrefix(inputString, "(") && strings.HasSuffix(inputString, ")") {
-		//it is only the value
-
+		//it is only the value of a "container" key
 		inputString = strings.Trim(inputString, "()")
 
 		parts = splitInputString(inputString)
@@ -209,10 +191,10 @@ func deserializeToContainerKv(inputString string) ([]ContainerKeyValue, error) {
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, ContainerKeyValue{Key: key, Value: nestedSlice})
+			result = append(result, ContainerKey{Key: key, Value: nestedSlice})
 		} else {
 			// If the value is a simple value, store it directly
-			result = append(result, ContainerKeyValue{Key: key, Value: strings.TrimSpace(kv[1])})
+			result = append(result, ContainerKey{Key: key, Value: toGuessedType(strings.TrimSpace(kv[1]))})
 		}
 	}
 
