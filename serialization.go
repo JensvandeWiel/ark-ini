@@ -4,8 +4,6 @@ import (
 	"strings"
 )
 
-//TODO add parsing of values and save them as the type and not a string
-
 // SerializeIniFile converts IniFile to INI format string
 func SerializeIniFile(file *IniFile) string {
 	var result string
@@ -15,12 +13,10 @@ func SerializeIniFile(file *IniFile) string {
 	return result
 }
 
-//TODO add parsing of values and save them as the type and not a string
-
 // DeserializeIniFile converts INI format string to IniFile
-func DeserializeIniFile(data string) (IniFile, error) {
+func DeserializeIniFile(data string, allowedDuplicateKeys ...string) (IniFile, error) {
 	// Initialize an empty IniFile
-	file := NewIniFile("")
+	file := NewIniFile("", allowedDuplicateKeys...)
 	var currentSection *IniSection
 	var currentLine string
 
@@ -40,7 +36,7 @@ func DeserializeIniFile(data string) (IniFile, error) {
 			if strings.HasPrefix(currentLine, "[") && strings.HasSuffix(currentLine, "]") {
 				// Extract the section name and create a new section
 				sectionName := strings.TrimPrefix(strings.TrimSuffix(currentLine, "]"), "[")
-				currentSection = NewIniSection(sectionName)
+				currentSection = NewIniSection(sectionName, &file.AllowedDuplicateKeys)
 				// Add the new section to the IniFile
 				file.Sections = append(file.Sections, currentSection)
 			} else if currentSection != nil {

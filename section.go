@@ -2,15 +2,17 @@ package ini
 
 // IniSection represents a section in an INI file
 type IniSection struct {
-	SectionName string
-	Keys        []*IniKey
+	AllowedDuplicateKeys *[]string
+	SectionName          string
+	Keys                 []*IniKey
 }
 
 // NewIniSection returns a new IniSection with the given section name
-func NewIniSection(sectionName string) *IniSection {
+func NewIniSection(sectionName string, allowedDuplicateKeys *[]string) *IniSection {
 	return &IniSection{
-		SectionName: sectionName,
-		Keys:        make([]*IniKey, 0),
+		AllowedDuplicateKeys: allowedDuplicateKeys,
+		SectionName:          sectionName,
+		Keys:                 make([]*IniKey, 0),
 	}
 }
 

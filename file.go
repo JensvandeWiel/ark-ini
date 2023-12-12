@@ -43,7 +43,7 @@ func (f *IniFile) GetSection(sectionName string) (*IniSection, bool) {
 func (f *IniFile) GetOrCreateSection(sectionName string) *IniSection {
 	section, exists := f.GetSection(sectionName)
 	if !exists {
-		section = NewIniSection(sectionName)
+		section = NewIniSection(sectionName, &f.AllowedDuplicateKeys)
 		f.Sections = append(f.Sections, section)
 	}
 	return section
