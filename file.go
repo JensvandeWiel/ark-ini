@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 )
 
-//TODO add parsing of values and save them as the type and not a string
-
 type IniFile struct {
 	fileName             string
 	FilePath             string
