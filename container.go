@@ -136,9 +136,14 @@ func (c *ContainerKey) AsGuessedValue() (interface{}, KeyType, error) {
 
 //region helpers
 
+// ValueToString returns the values of the container as a string e.g. "EngramClassName="EngramEntry_CryoGun_Mod_C",EngramHidden=True,EngramPointsCost=0,EngramLevelRequirement=90,RemoveEngramPreReq=False"
+func (c *IniContainer) ValueToString() string {
+	return serializeToContainerKV(c.KeyValues)
+}
+
 // ToString returns the values of the container as a string e.g. "EngramClassName="EngramEntry_CryoGun_Mod_C",EngramHidden=True,EngramPointsCost=0,EngramLevelRequirement=90,RemoveEngramPreReq=False"
 func (c *IniContainer) ToString() string {
-	return serializeToContainerKV(c.KeyValues)
+	return "(" + serializeToContainerKV(c.KeyValues) + ")"
 }
 
 // serializeToContainerKV serializes a slice of key-value pairs to a string
