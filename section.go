@@ -1,5 +1,7 @@
 package ini
 
+import "errors"
+
 // IniSection represents a section in an INI file
 type IniSection struct {
 	AllowedDuplicateKeys *[]string
@@ -17,6 +19,25 @@ func NewIniSection(sectionName string, allowedDuplicateKeys *[]string) *IniSecti
 }
 
 //region Key & Value adding
+
+// OverwriteKey if the key is an allowed duplicate key it will remove all the old keys and overwrite them with the values you provide, if the key is not an allowed duplicate key it will overwrite the first key found
+func (s *IniSection) OverwriteKey(key string, value ...string) error {
+
+	if len(value) == 0 {
+		return errors.New("no value(s) provided")
+	}
+
+	if s.IsAllowedDuplicateKey(key) {
+		s.RemoveMultipleKey(key)
+		for _, v := range value {
+			s.AddKey(key, v)
+		}
+	} else {
+		s.AddOrReplaceKey(key, value[0])
+	}
+
+	return nil
+}
 
 // AddKey adds a key no matter if it already exists. (May result in duplicate keys) (it will take the first key found if there are more)
 func (s *IniSection) AddKey(keyName string, value interface{}) {
@@ -135,6 +156,16 @@ func (s *IniSection) CheckForMultipleKeys(keyName string) int {
 		}
 	}
 	return count
+}
+
+// IsAllowedDuplicateKey returns true if the key is allowed to be duplicated in the section
+func (s *IniSection) IsAllowedDuplicateKey(keyName string) bool {
+	for _, allowedKey := range *s.AllowedDuplicateKeys {
+		if allowedKey == keyName {
+			return true
+		}
+	}
+	return false
 }
 
 //endregion
