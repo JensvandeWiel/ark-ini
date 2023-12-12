@@ -4,14 +4,16 @@ import (
 	"strings"
 )
 
-// SerializeIniFile converts IniFile to INI format string
+//Same as IniFile.ToString()
+
+/*// SerializeIniFile converts IniFile to INI format string
 func SerializeIniFile(file *IniFile) string {
 	var result string
 	for _, section := range file.Sections {
 		result += section.ToString()
 	}
 	return result
-}
+}*/
 
 // DeserializeIniFile converts INI format string to IniFile
 func DeserializeIniFile(data string, allowedDuplicateKeys ...string) (*IniFile, error) {

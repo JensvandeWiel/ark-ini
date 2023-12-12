@@ -22,6 +22,10 @@ func NewIniContainerFromString(inputString string) (IniContainer, error) {
 	return IniContainer{KeyValues: keyValues}, nil
 }
 
+func NewIniContainerFromSlice(inputSlice []ContainerKey) IniContainer {
+	return IniContainer{KeyValues: inputSlice}
+}
+
 // FindKey returns the key with the given name and true, or nil and false if it doesn't exist
 func (c *IniContainer) FindKey(keyName string) (*ContainerKey, bool) {
 	for _, key := range c.KeyValues {

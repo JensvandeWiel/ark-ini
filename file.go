@@ -66,13 +66,13 @@ func (f *IniFile) RemoveAllSections() {
 }
 
 // AddKeyToSection adds a key to the section with the given name, if the section does not exist it is created
-func (f *IniFile) AddKeyToSection(sectionName string, keyName string, value string) {
+func (f *IniFile) AddKeyToSection(sectionName string, keyName string, value interface{}) {
 	section := f.GetOrCreateSection(sectionName)
 	section.AddKey(keyName, value)
 }
 
 // UpdateOrCreateKeyInSection updates the value of the key with the given name in the section with the given name, or creates a new key with the given name and value in the section. If the section does not exist it is created.
-func (f *IniFile) UpdateOrCreateKeyInSection(sectionName string, keyName string, value string) {
+func (f *IniFile) UpdateOrCreateKeyInSection(sectionName string, keyName string, value interface{}) {
 	section := f.GetOrCreateSection(sectionName)
 	section.AddOrReplaceKey(keyName, value)
 }
