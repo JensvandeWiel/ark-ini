@@ -39,7 +39,7 @@ func (s *IniSection) OverwriteKey(key string, value ...string) error {
 	return nil
 }
 
-// AddKey adds a key no matter if it already exists. (May result in duplicate keys) (it will take the first key found if there are more)
+// AddKey adds a key no matter if it already exists. (May result in duplicate keys) (it will take the fiFrst key found if there are more)
 func (s *IniSection) AddKey(keyName string, value interface{}) {
 	s.Keys = append(s.Keys, NewIniKey(keyName, value))
 }
@@ -118,6 +118,27 @@ func (s *IniSection) RemoveMultipleKey(keyName string) {
 // RemoveAllKeys removes all keys from the section
 func (s *IniSection) RemoveAllKeys() {
 	s.Keys = make([]*IniKey, 0)
+}
+
+// FindKey returns the key with the given name and true, or nil and false if it doesn't exist
+func (s *IniSection) FindKey(keyName string) (*IniKey, bool) {
+	for _, key := range s.Keys {
+		if key.Key == keyName {
+			return key, true
+		}
+	}
+	return nil, false
+}
+
+// FindKeys returns all the keys with the same name
+func (s *IniSection) FindKeys(keyName string) []*IniKey {
+	var keys []*IniKey
+	for _, key := range s.Keys {
+		if key.Key == keyName {
+			keys = append(keys, key)
+		}
+	}
+	return keys
 }
 
 //endregion

@@ -1,6 +1,7 @@
 package ini
 
 import (
+	"errors"
 	"path/filepath"
 )
 
@@ -13,9 +14,9 @@ type IniFile struct {
 	Sections             []*IniSection
 }
 
-func NewIniFile(path string, allowedDuplicateKeys ...string) IniFile {
+func NewIniFile(path string, allowedDuplicateKeys ...string) *IniFile {
 	fileName := removeFileExtension(filepath.Base(path))
-	return IniFile{
+	return &IniFile{
 		fileName:             fileName,
 		FilePath:             path,
 		AllowedDuplicateKeys: allowedDuplicateKeys,
@@ -107,4 +108,25 @@ func (f *IniFile) ToString() string {
 		file += section.ToString()
 	}
 	return file
+}
+
+func (f *IniFile) FindKeyFromSection(section string, key string) (*IniKey, error) {
+	sec, exists := f.GetSection(section)
+	if exists {
+		key, exists := sec.FindKey(key)
+		if exists {
+			return key, nil
+		}
+		return nil, errors.New("key not found")
+	}
+	return nil, errors.New("section not found")
+}
+
+// FindKeyFromSectionWithMultipleValues returns all the keys with the given name from the section with the given name
+func (f *IniFile) FindKeyFromSectionWithMultipleValues(sectionName string, keyName string) []*IniKey {
+	section, exists := f.GetSection(sectionName)
+	if exists {
+		return section.FindKeys(keyName)
+	}
+	return nil
 }
