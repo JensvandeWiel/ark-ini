@@ -12,7 +12,7 @@ func TestNewIniFile(t *testing.T) {
 	}
 
 	ini.AddKeyToSection("default", "key", "value")
-	key, err := ini.FindKeyFromSection("default", "key")
+	key, err := ini.GetKeyFromSection("default", "key")
 	if err != nil {
 		return
 	}
@@ -39,5 +39,45 @@ data:
 ini.ToString():
 ` + ini.ToString() + `
 `)
+	}
+}
+
+func TestIniFile_SafelyAddKeyToSection(t *testing.T) {
+	ini1 := NewIniFile()
+	ini1.SafelyAddKeyToSection("default", "key", "value")
+	ini1.SafelyAddKeyToSection("default", "key", "value2")
+	keys1, err := ini1.GetKeyFromSectionWithMultipleValues("default", "key")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if len(keys1) != 1 {
+		t.Fail()
+	}
+
+	if keys1[0].ToValueString() != "value2" {
+		t.Fail()
+	}
+
+	ini2 := NewIniFile("key")
+	ini2.SafelyAddKeyToSection("default", "key", "value")
+	ini2.SafelyAddKeyToSection("default", "key", "value2")
+	keys2, err := ini2.GetKeyFromSectionWithMultipleValues("default", "key")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if len(keys2) != 2 {
+		t.Fail()
+	}
+
+	if keys2[0].ToValueString() != "value" {
+		t.Fail()
+	}
+
+	if keys2[1].ToValueString() != "value2" {
+		t.Fail()
 	}
 }

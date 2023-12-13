@@ -131,14 +131,19 @@ func (s *IniSection) FindKey(keyName string) (*IniKey, bool) {
 }
 
 // FindKeys returns all the keys with the same name
-func (s *IniSection) FindKeys(keyName string) []*IniKey {
+func (s *IniSection) FindKeys(keyName string) ([]*IniKey, error) {
 	var keys []*IniKey
 	for _, key := range s.Keys {
 		if key.Key == keyName {
 			keys = append(keys, key)
 		}
 	}
-	return keys
+
+	if len(keys) == 0 {
+		return nil, errors.New("no matching keys found")
+	}
+
+	return keys, nil
 }
 
 //endregion

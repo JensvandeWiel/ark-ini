@@ -18,7 +18,7 @@ func SerializeIniFile(file *IniFile) string {
 // DeserializeIniFile converts INI format string to IniFile
 func DeserializeIniFile(data string, allowedDuplicateKeys ...string) (*IniFile, error) {
 	// Initialize an empty IniFile
-	file := NewIniFile("", allowedDuplicateKeys...)
+	file := NewIniFile(allowedDuplicateKeys...)
 	var currentSection *IniSection
 	var currentLine string
 

@@ -1,55 +1,36 @@
 package main
 
-import (
-	"github.com/JensvandeWiel/ark-ini"
-	"strconv"
-)
+import ini "github.com/JensvandeWiel/ark-ini"
 
 func main() {
-	str := `[bob]
-test=1
-test2=1
-test2=2`
-	iniFile, _ := ini.DeserializeIniFile(str)
-	sec, exists := iniFile.GetSection("bob")
-	if !exists {
-		panic("section doesn't exist")
-	}
+	file := ini.NewIniFile()
 
-	println(iniFile.ToString())
-	println(sec.CheckForMultipleKeys("test2"))
-	keys := sec.GetMultipleKeys("test2")
-	for _, key := range keys {
-		intkey, err := key.AsInt()
-		if err != nil {
-			panic(err)
-		}
-		key.Value = strconv.Itoa(intkey + 1)
-	}
-	println(iniFile.ToString())
+	// test=test1
+	// test=test2
+	section := file.GetOrCreateSection("test")
+	section.AddKey("test", "test1")
+	section.AddKey("test", "test2")
+	println(file.ToString())
 
-	sec.AddOrReplaceKey("test3", "(Bob=1,Bob2=2)")
+	file2 := ini.NewIniFile()
 
-	println(iniFile.ToString())
+	// test=test2
+	section2 := file2.GetOrCreateSection("test")
+	section2.AddOrReplaceKey("test", "test1")
+	section2.AddOrReplaceKey("test", "test2")
+	println(file2.ToString())
 
-	ke, exists := sec.GetKey("test3")
-	if !exists {
-		panic("key doesn't exist")
-	}
+	file3 := ini.NewIniFile("test")
+	// test=test1
+	// test=test2
+	file3.SafelyAddKeyToSection("test", "test", "test1")
+	file3.SafelyAddKeyToSection("test", "test", "test2")
+	println(file3.ToString())
 
-	val, typ := ke.AsGuessedValue()
-	if typ != ini.Container {
-		panic(typ)
-	}
-	wow := val.(ini.IniContainer)
-
-	ketro, found := wow.FindKey("Bob2")
-	if !found {
-		panic("key doesn't exist")
-	}
-
-	valfj, _ := ketro.AsInt()
-
-	println(valfj)
+	file4 := ini.NewIniFile()
+	// test=test2
+	file4.SafelyAddKeyToSection("test", "test", "test1")
+	file4.SafelyAddKeyToSection("test", "test", "test2")
+	println(file4.ToString())
 
 }

@@ -2,21 +2,15 @@ package ini
 
 import (
 	"errors"
-	"path/filepath"
 )
 
 type IniFile struct {
-	fileName             string
-	FilePath             string
 	AllowedDuplicateKeys []string
 	Sections             []*IniSection
 }
 
-func NewIniFile(path string, allowedDuplicateKeys ...string) *IniFile {
-	fileName := removeFileExtension(filepath.Base(path))
+func NewIniFile(allowedDuplicateKeys ...string) *IniFile {
 	return &IniFile{
-		fileName:             fileName,
-		FilePath:             path,
 		AllowedDuplicateKeys: allowedDuplicateKeys,
 		Sections:             make([]*IniSection, 0),
 	}
@@ -48,6 +42,28 @@ func (f *IniFile) GetOrCreateSection(sectionName string) *IniSection {
 	return section
 }
 
+// GetKeyFromSection returns the key with the given name from the section with the given name
+func (f *IniFile) GetKeyFromSection(sectionName string, keyName string) (*IniKey, error) {
+	section, exists := f.GetSection(sectionName)
+	if exists {
+		key, exists := section.FindKey(keyName)
+		if exists {
+			return key, nil
+		}
+		return nil, errors.New("key not found")
+	}
+	return nil, errors.New("section not found")
+}
+
+// GetKeyFromSectionWithMultipleValues returns all the keys with the given name from the section with the given name
+func (f *IniFile) GetKeyFromSectionWithMultipleValues(sectionName string, keyName string) ([]*IniKey, error) {
+	section, exists := f.GetSection(sectionName)
+	if exists {
+		return section.FindKeys(keyName)
+	}
+	return nil, errors.New("section not found")
+}
+
 // RemoveSection removes the section with the given name from the file
 func (f *IniFile) RemoveSection(sectionName string) {
 	for i, section := range f.Sections {
@@ -61,6 +77,16 @@ func (f *IniFile) RemoveSection(sectionName string) {
 // RemoveAllSections removes all sections from the file
 func (f *IniFile) RemoveAllSections() {
 	f.Sections = make([]*IniSection, 0)
+}
+
+// SafelyAddKeyToSection same as the others but will automatically check if duplicates are allowed, if so it will add the key, if not it will replace it.
+func (f *IniFile) SafelyAddKeyToSection(sectionName string, keyName string, value interface{}) {
+	if f.duplicateAllowed(keyName) {
+		f.AddKeyToSection(sectionName, keyName, value)
+	} else {
+		f.UpdateOrCreateKeyInSection(sectionName, keyName, value)
+
+	}
 }
 
 // AddKeyToSection adds a key to the section with the given name, if the section does not exist it is created
@@ -108,23 +134,11 @@ func (f *IniFile) ToString() string {
 	return file
 }
 
-func (f *IniFile) FindKeyFromSection(section string, key string) (*IniKey, error) {
-	sec, exists := f.GetSection(section)
-	if exists {
-		key, exists := sec.FindKey(key)
-		if exists {
-			return key, nil
+func (f *IniFile) duplicateAllowed(key string) bool {
+	for _, allowedKey := range f.AllowedDuplicateKeys {
+		if key == allowedKey {
+			return true
 		}
-		return nil, errors.New("key not found")
 	}
-	return nil, errors.New("section not found")
-}
-
-// FindKeyFromSectionWithMultipleValues returns all the keys with the given name from the section with the given name
-func (f *IniFile) FindKeyFromSectionWithMultipleValues(sectionName string, keyName string) []*IniKey {
-	section, exists := f.GetSection(sectionName)
-	if exists {
-		return section.FindKeys(keyName)
-	}
-	return nil
+	return false
 }
