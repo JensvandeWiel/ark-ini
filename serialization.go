@@ -86,3 +86,28 @@ func DeserializeIniFile(data string, allowedDuplicateKeys ...string) (*IniFile, 
 	// Return the IniFile
 	return file, nil
 }
+
+// ToMap converts a INIFile to a map[string]map[string]string
+func ToMap(file *IniFile) map[string]map[string]string {
+	result := make(map[string]map[string]string)
+	for _, section := range file.Sections {
+		result[section.SectionName] = make(map[string]string)
+		for _, key := range section.Keys {
+			result[section.SectionName][key.Key] = key.ToValueString()
+		}
+	}
+	return result
+}
+
+// DeserializeFromMap converts a map[string]map[string]string to an IniFile
+func DeserializeFromMap(data map[string]map[string]string, allowedDuplicateKeys ...string) *IniFile {
+	file := NewIniFile(allowedDuplicateKeys...)
+	for sectionName, sectionData := range data {
+		section := NewIniSection(sectionName, &file.AllowedDuplicateKeys)
+		for keyName, keyValue := range sectionData {
+			section.AddKey(keyName, toGuessedType(keyValue))
+		}
+		file.Sections = append(file.Sections, section)
+	}
+	return file
+}
