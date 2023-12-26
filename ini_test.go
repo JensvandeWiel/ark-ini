@@ -81,3 +81,16 @@ func TestIniFile_SafelyAddKeyToSection(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestToMap(t *testing.T) {
+	data := `[default]
+bob=value
+bob=value2
+key2=(key=(bob=bab),wow=22.1)`
+
+	ini, _ := DeserializeIniFile(data)
+	mapp := ToMap(ini)
+	if strings.TrimSpace(DeserializeFromMap(mapp).ToString()) != strings.TrimSpace(data) {
+		t.Fail()
+	}
+}
